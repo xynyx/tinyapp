@@ -1,9 +1,9 @@
 <!-- _ signifies header partial -->
-
 <header>
   <nav class="navbar navbar-expand-md navbar-dark bg-success">
     <a class="navbar-brand" href="/urls">TinyApp</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+      aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
@@ -11,6 +11,14 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
+    </div>
+    <div class="text-right">
+      <form id="login" method="POST" action="/login">
+        <input placeholder="Username" class = "form-control round" type="text" name="username" style="width: 200px; margin: 0.2em; margin-right: 10px"></input>
+      </form>
+    </div>
+    <div>
+      <button class="btn btn-secondary" form="login">Login</button>
     </div>
   </nav>
 </header>
