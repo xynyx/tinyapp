@@ -19,7 +19,8 @@
       <form method="POST" action="/urls/<%=shortURL%>">
         <h3><strong>Edit</strong></h3>
         <label for="edit"><strong>New URL:</strong></label>
-        <input type="text" id="edit" name="edit" placeholder="http://"></input>
+        <!-- name in input attribute changes the key name! -->
+        <input type="text" id="edit" name="longURL" placeholder="http://"></input>
         <button class="btn btn-primary">Submit</button>
         <p></p>
       </form>

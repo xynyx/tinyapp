@@ -15,13 +15,6 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-// When user inputs new URL, a random string is generated for the shortURL, and a shortURL:longURL pair is created and added to urlDatabase
-app.post("/urls", (req, res) => {
-  const shortURL = generateRandomString()
-  urlDatabase[shortURL] = req.body.longURL;
-  res.redirect(`/urls/${shortURL}`)
-});
-
 // Don't need this
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -48,20 +41,26 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls");
 })
+
+// Update longURL
+app.post("/urls/:shortURL", (req, res) => {
+  console.log(req.body);
+  urlDatabase[req.params.shortURL] = req.body.longURL ;
+  res.redirect("/urls");
+})
+
 // After generating new shortURL, and using route parameters, redirect user to urls_show page displaying the short and long URL
-
-
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
 
-// Update longURL
-app.post("/urls/:shortURL", (req, res) => {
-  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
-  res.render("urls_show", templateVars);
-  res.redirect("/urls");
-})
+// When user inputs new URL, a random string is generated for the shortURL, and a shortURL:longURL pair is created and added to urlDatabase
+app.post("/urls", (req, res) => {
+  const shortURL = generateRandomString()
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${shortURL}`)
+});
 
 // When the shortened link is clicked on after redirection, redirect to the longURL site
 app.get("/u/:shortURL", (req, res) => {
