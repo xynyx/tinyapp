@@ -15,36 +15,45 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
+// When user inputs new URL, a random string is generated for the shortURL, and a shortURL:longURL pair is created and added to urlDatabase
 app.post("/urls", (req, res) => {
-  console.log(req.body);
-  res.send("Ok");
+  const shortURL = generateRandomString()
+  urlDatabase[shortURL] = req.body.longURL;
+  res.redirect(`/urls/${shortURL}`)
 });
 
+// Don't need this
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+// urlDatabase in json format
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+// When user goes to /urls page, display the index which is a list of the urlDatabase key:value pairs
 app.get("/urls", (req, res) => {
   let templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
+// 
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+// After generating new shortURL, and using route parameters, redirect user to urls_show page displaying the short and long URL
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
-});
+// When the shortened link is clicked on after redirection, redirect to the longURL site
+app.get("/u/:shortURL", (req, res) => {
+  const longURL = urlDatabase[req.params.shortURL]
+  res.redirect(longURL);
+})
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}`);
