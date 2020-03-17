@@ -17,17 +17,12 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-// Don't need this
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
-// urlDatabase in json format
+// urlDatabase in json format (REMOVE)
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-// When user goes to /urls page, display the index which is a list of the urlDatabase key:value pairs
+// Displays the index which is a list of the urlDatabase shortURL:longURL pairs
 app.get("/urls", (req, res) => {
   let templateVars = { 
     urls: urlDatabase,
@@ -36,7 +31,7 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
-// 
+// Create new tiny URL
 app.get("/urls/new", (req, res) => {
   let templateVars = { 
     username: req.cookies["username"]
@@ -44,7 +39,7 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
-
+// Delete entry added to My URLs
 app.post("/urls/:shortURL/delete", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls");
@@ -66,30 +61,31 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars)
 });
 
-// When user inputs new URL, a random string is generated for the shortURL, and a shortURL:longURL pair is created and added to urlDatabase
+// Generate random 6-digit shortURL code and attach longURL to it
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
 });
 
-// When the shortened link is clicked on after redirection, redirect to the longURL site
+// When the shortened link is clicked on, redirect to the site
 app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL];
   res.redirect(longURL);
 });
 
+// Login and create cookie for current user
 app.post("/login", (req, res) => {
   res.cookie("username", req.body.username);
   res.redirect("/urls");
 });
 
+// Logout and delete cookie for current user
 app.post("/logout", (req, res) => {
   res.clearCookie("username");
   res.redirect("/urls");
 })
 
-app.listen(PORT, () => {
-  console.log(`Example app listening on port ${PORT}`);
-});
+// Listen for the server on the port; required to operate (though nothing needs to be put in the function itself)
+app.listen(PORT, () => {});
 
