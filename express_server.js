@@ -49,10 +49,19 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect("/urls");
 })
 // After generating new shortURL, and using route parameters, redirect user to urls_show page displaying the short and long URL
+
+
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
+
+// Update longURL
+app.post("/urls/:shortURL", (req, res) => {
+  let templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  res.render("urls_show", templateVars);
+  res.redirect("/urls");
+})
 
 // When the shortened link is clicked on after redirection, redirect to the longURL site
 app.get("/u/:shortURL", (req, res) => {
