@@ -22,15 +22,6 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-// Displays the index which is a list of the urlDatabase shortURL:longURL pairs
-app.get("/urls", (req, res) => {
-  let templateVars = { 
-    urls: urlDatabase,
-    username: req.cookies["username"]
-  };
-  res.render("urls_index", templateVars);
-});
-
 // Create new tiny URL
 app.get("/urls/new", (req, res) => {
   let templateVars = { 
@@ -61,11 +52,29 @@ app.get("/urls/:shortURL", (req, res) => {
   res.render("urls_show", templateVars)
 });
 
+app.get("/register", (req, res) => {
+  res.render("urls_register")
+})
+
 // Generate random 6-digit shortURL code and attach longURL to it
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  // TinyURL will not function correctly without proper protocol; add if missing
+  if (!req.body.longURL.includes("http://")) {
+    urlDatabase[shortURL] = `http://${req.body.longURL}`;
+  } else {
+    urlDatabase[shortURL] = req.body.longURL;
+  }
   res.redirect(`/urls/${shortURL}`);
+});
+
+// Displays the index which is a list of the urlDatabase shortURL:longURL pairs
+app.get("/urls", (req, res) => {
+  let templateVars = { 
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  };
+  res.render("urls_index", templateVars);
 });
 
 // When the shortened link is clicked on, redirect to the site
