@@ -12,10 +12,11 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <% if (username){ %>
+    <!-- Cannot just access email, must access user variable first! -->
+    <% if (user.email){ %>
       <div>
+        <span>Logged In As: <%=user.email%></span>
         <form id="logout" method="POST" action="/logout" style="font-size: 1.05em">
-          <span>Logged In As: <%=username%></span>
         </form>
       </div>
       <div>
@@ -24,7 +25,7 @@
       <% } else{ %>
         <div class="text-right">
           <form id="login" method="POST" action="/login">
-            <input placeholder="Username" class = "form-control round" type="text" name="username" style="width: 200px; margin: 0.2em; margin-right: 10px"></input>
+            <input placeholder="Email" class = "form-control round" type="text" name="user_id" style="width: 200px; margin: 0.2em; margin-right: 10px"></input>
           </form>
         </div>
         <div>

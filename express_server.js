@@ -10,12 +10,25 @@ function generateRandomString() {
   return Math.random().toString(36).slice(2).substring(0, 6);
 };
 
+// Check to see if the email address already exists in the list of users
+function checkUsersEmail(emailAddress) {
+  for (const user in users) {
+    // NOT users[users.email]!!!
+    if (users[user].email === emailAddress) {
+      return true;
+    }
+  }
+  return false;
+};
+
 app.set("view engine", "ejs");
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
   "9sm5xK": "http://www.google.com"
 };
+
+const users = {};
 
 // urlDatabase in json format (REMOVE)
 app.get("/urls.json", (req, res) => {
@@ -24,8 +37,9 @@ app.get("/urls.json", (req, res) => {
 
 // Create new tiny URL
 app.get("/urls/new", (req, res) => {
+  const user = users[req.cookies["user_id"]];
   let templateVars = { 
-    username: req.cookies["username"]
+    user
   };
   res.render("urls_new", templateVars);
 });
@@ -44,8 +58,9 @@ app.post("/urls/:shortURL", (req, res) => {
 
 // After generating new shortURL, and using route parameters, redirect user to urls_show page displaying the short and long URL
 app.get("/urls/:shortURL", (req, res) => {
+  const user = users[req.cookies["user_id"]];
   let templateVars = {
-    username: req.cookies["username"],
+    user,
     shortURL: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL],
   };
@@ -54,6 +69,23 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.get("/register", (req, res) => {
   res.render("urls_register")
+})
+
+app.post("/register", (req, res) => {
+  if(checkUsersEmail(req.body.email)) {
+    res.sendStatus(400);
+  }
+  const id = generateRandomString();
+  users[id] = { id, email: req.body.email, password: req.body.password };
+
+  if (users[id].email === "" || users[id].password === "") {
+    res.sendStatus(400);
+  } else {
+    res.cookie("user_id", users[id].id)
+    res.redirect("/urls");
+  }
+  console.log(users);
+  // console.log(users[id].id)
 })
 
 // Generate random 6-digit shortURL code and attach longURL to it
@@ -70,11 +102,17 @@ app.post("/urls", (req, res) => {
 
 // Displays the index which is a list of the urlDatabase shortURL:longURL pairs
 app.get("/urls", (req, res) => {
-  let templateVars = { 
-    urls: urlDatabase,
-    username: req.cookies["username"]
-  };
-  res.render("urls_index", templateVars);
+  const user = users[req.cookies["user_id"]];
+  if (user) {
+    let templateVars = { 
+      urls: urlDatabase,
+      user
+    };
+    res.render("urls_index", templateVars);
+  } else {
+    res.redirect("/register");
+  }
+  // console.log(user)
 });
 
 // When the shortened link is clicked on, redirect to the site
@@ -84,17 +122,22 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 // Login and create cookie for current user
-app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("/urls");
-});
+// app.post("/login", (req, res) => {
+//   res.cookie("username", req.body.username);
+//   res.redirect("/urls");
+// });
+
+app.get("/login", (req, res) => {
+  res.render("urls_login")
+})
 
 // Logout and delete cookie for current user
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id", users[req.cookies["user_id"]]);
   res.redirect("/urls");
 })
 
 // Listen for the server on the port; required to operate (though nothing needs to be put in the function itself)
 app.listen(PORT, () => {});
+
 
