@@ -21,12 +21,22 @@ function checkUsersEmail(emailAddress) {
   return false;
 };
 
+function urlsForUser(id) {
+  const filtered = Object.
+}
+
 app.set("view engine", "ejs");
 
+// "b2xVn2": "http://www.lighthouselabs.ca",
+// "9sm5xK": "http://www.google.com"
+
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "aJ48lW" },
+  "9sm5xK": { longURL: "http://www.google.com", userID: "aJ48lw" }
 };
+
+console.log(Object.entries(urlDatabase))
+
 
 const users = {};
 
@@ -44,7 +54,7 @@ app.get("/users.json", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const user = users[req.cookies["user_id"]];
   if (user) {
-    let templateVars = { 
+    let templateVars = {
       user
     };
     res.render("urls_new", templateVars);
@@ -62,17 +72,18 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 // Update longURL
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.longURL;
+  urlDatabase[req.params.shortURL].longURL = req.body.longURL;
   res.redirect("/urls");
 });
 
 // After generating new shortURL, and using route parameters, redirect user to urls_show page displaying the short and long URL
 app.get("/urls/:shortURL", (req, res) => {
   const user = users[req.cookies["user_id"]];
+  // console.log(urlDatabase[req.params.shortURL].longURL);
   let templateVars = {
     user,
     shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
+    longURL: urlDatabase[req.params.shortURL].longURL,
   };
   res.render("urls_show", templateVars);
 });
@@ -83,29 +94,26 @@ app.get("/register", (req, res) => {
 
 app.post("/register", (req, res) => {
   if (checkUsersEmail(req.body.email)) {
-    res.sendStatus(400);
-  }
-  console.log(Object.values(users));
-  const id = generateRandomString();
-  users[id] = { id, email: req.body.email, password: req.body.password };
-
-  if (users[id].email === "" || users[id].password === "") {
-    res.send(`Please enter an email and/or password. Statuscode:${res.sendStatus(400)}`);
+    res.status(400).send('Something broke!')
+  } else if (req.body.email === "" || req.body.password === "") {
+    res.status(400).send('Something broke!')
   } else {
+    const id = generateRandomString();
+    users[id] = { id, email: req.body.email, password: req.body.password };
     res.cookie("user_id", users[id].id);
     res.redirect("/urls");
   }
-  // console.log(users[id].id)
 });
 
 // Generate random 6-digit shortURL code and attach longURL to it
 app.post("/urls", (req, res) => {
+  const user = users[req.cookies["user_id"]];
   const shortURL = generateRandomString();
   // TinyApp will not function correctly without proper protocol; add if missing
   if (!req.body.longURL.includes("http://")) {
-    urlDatabase[shortURL] = `http://${req.body.longURL}`;
+    urlDatabase[shortURL] = { longURL: `http://${req.body.longURL}`, userID: user.id };
   } else {
-    urlDatabase[shortURL] = req.body.longURL;
+    urlDatabase[shortURL] = { "longURL": req.body.longURL, "userID": user.id };
   }
   res.redirect(`/urls/${shortURL}`);
 });
@@ -114,19 +122,24 @@ app.post("/urls", (req, res) => {
 app.get("/urls", (req, res) => {
   const user = users[req.cookies["user_id"]];
   if (user) {
-    let templateVars = { 
+    let templateVars = {
       urls: urlDatabase,
       user
     };
+    // console.log(templateVars.urls)
+    // for(let url in templateVars.urls) {
+    //   console.log(url);
+    //   console.log(templateVars.urls[url])
+    // }
     res.render("urls_index", templateVars);
   } else {
     res.redirect("/register");
   }
 });
 
-// When the shortened link is clicked on, redirect to the site
+// When the shortened link is clicked on, redirect to the site`http://${req.body.longURL}`
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -144,7 +157,7 @@ app.post("/login", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  res.render("urls_login", { user: undefined});
+  res.render("urls_login", { user: undefined });
 });
 
 // app.get("/logout", (req, res) => {
