@@ -21,10 +21,6 @@ function checkUsersEmail(emailAddress) {
   return false;
 };
 
-function urlsForUser(id) {
-  const filtered = Object.
-}
-
 app.set("view engine", "ejs");
 
 // "b2xVn2": "http://www.lighthouselabs.ca",
@@ -32,11 +28,23 @@ app.set("view engine", "ejs");
 
 const urlDatabase = {
   "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "aJ48lW" },
-  "9sm5xK": { longURL: "http://www.google.com", userID: "aJ48lw" }
+  "9sm5xK": { longURL: "http://www.google.com", userID: "aJ479x" },
+  "9sasdK": { longURL: "http://www.godfgdfogle.com", userID: "aJ48lW" },
+  "9smsdfxK": { longURL: "http://www.google.com", userID: "aJ479sdgx" },
+  "9sx41K": { longURL: "http://www.google.com", userID: "aJ48lW" }
 };
 
-console.log(Object.entries(urlDatabase))
+// urlDatabase[shortURL] = { longURL: `http://${req.body.longURL}`, userID: user.id };
 
+function urlsForUser(id) {
+  let filteredLinks = {};
+  for (const person in urlDatabase) {
+    if (urlDatabase[person].userID === id) {
+      filteredLinks[person] = { longURL: urlDatabase[person].longURL, userID: urlDatabase[person].userID };
+    }
+  }
+  return filteredLinks;
+};
 
 const users = {};
 
@@ -66,26 +74,45 @@ app.get("/urls/new", (req, res) => {
 
 // Delete entry added to My URLs
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect("/urls");
+  const user = users[req.cookies["user_id"]];
+  const shortURL = req.params.shortURL;
+  if (urlsForUser(user.id)[shortURL].userID === urlDatabase[shortURL].userID) {
+    delete urlDatabase[shortURL];
+    res.redirect("/urls");
+  } else {
+    res.redirect("/urls");
+  }
 });
 
 // Update longURL
 app.post("/urls/:shortURL", (req, res) => {
-  urlDatabase[req.params.shortURL].longURL = req.body.longURL;
-  res.redirect("/urls");
+  const user = users[req.cookies["user_id"]];
+  const shortURL = req.params.shortURL;
+  if (urlsForUser(user.id)[shortURL].userID === urlDatabase[shortURL].userID) {
+    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+    res.redirect("/urls");
+  } else {
+    res.redirect("/urls");
+  }
+
 });
 
 // After generating new shortURL, and using route parameters, redirect user to urls_show page displaying the short and long URL
 app.get("/urls/:shortURL", (req, res) => {
   const user = users[req.cookies["user_id"]];
-  // console.log(urlDatabase[req.params.shortURL].longURL);
-  let templateVars = {
-    user,
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL].longURL,
-  };
-  res.render("urls_show", templateVars);
+  const shortURL = req.params.shortURL;
+  // Check filtered list whether a shortURL exists (ie. not undefined), and continue
+  if (user && urlsForUser(user.id)[shortURL] !== undefined) {
+    let templateVars = {
+      user,
+      shortURL: shortURL,
+      longURL: urlsForUser(user.id)[shortURL].longURL,
+    };
+    res.render("urls_show", templateVars);
+  } else {
+    res.redirect("/login");
+  }
+
 });
 
 app.get("/register", (req, res) => {
@@ -94,9 +121,9 @@ app.get("/register", (req, res) => {
 
 app.post("/register", (req, res) => {
   if (checkUsersEmail(req.body.email)) {
-    res.status(400).send('Something broke!')
+    res.status(400).send('Something broke!');
   } else if (req.body.email === "" || req.body.password === "") {
-    res.status(400).send('Something broke!')
+    res.status(400).send('Something broke!');
   } else {
     const id = generateRandomString();
     users[id] = { id, email: req.body.email, password: req.body.password };
@@ -123,14 +150,9 @@ app.get("/urls", (req, res) => {
   const user = users[req.cookies["user_id"]];
   if (user) {
     let templateVars = {
-      urls: urlDatabase,
+      urls: urlsForUser(user.id),
       user
     };
-    // console.log(templateVars.urls)
-    // for(let url in templateVars.urls) {
-    //   console.log(url);
-    //   console.log(templateVars.urls[url])
-    // }
     res.render("urls_index", templateVars);
   } else {
     res.redirect("/register");
