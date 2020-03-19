@@ -9,27 +9,13 @@ app.use(cookieSession({
   keys: ["user_id"]
 }));
 const bcrypt = require("bcrypt");
-const { getUserByEmail } = require("./helpers.js")
-
-function generateRandomString() {
-  return Math.random().toString(36).slice(2).substring(0, 6);
-};
+app.listen(PORT, () => { });
+const { getUserByEmail, generateRandomString, urlsForUser } = require("./helpers.js");
 
 app.set("view engine", "ejs");
 
 const urlDatabase = {};
-const users = { "gb4177": { "id": "gb4177", "email": "matt.taylr22@gmail.com", "password": "$2b$10$N9obFc1TFjLA8uvMgr9QrelnrRgFf9YvRr6JzZzI41YvKIMGIGcgC" }, "gb1227": { "id": "gb1227", "email": "matt.tadsfsylr22@gmail.com", "password": "$2b$10$N9obFc1TFjLA8uvMgr9QrelnrRgFf9YvRr6JzZzI41YvKIMGIGcgC" } };
-
-// Filters urlDatabase and creates new database that only contains links for that particular user
-function urlsForUser(id) {
-  const filteredLinks = {};
-  for (const person in urlDatabase) {
-    if (urlDatabase[person].userID === id) {
-      filteredLinks[person] = urlDatabase[person];
-    }
-  }
-  return filteredLinks;
-};
+const users = {};
 
 // urlDatabase in json format (REMOVE)
 app.get("/urls.json", (req, res) => {
@@ -52,7 +38,6 @@ app.get("/urls/new", (req, res) => {
   } else {
     res.redirect("/login");
   }
-
 });
 
 // Delete entry added to My URLs
@@ -71,31 +56,30 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const user = users[req.session.user_id];
   const shortURL = req.params.shortURL;
-  if (_.urlsForUser(user.id)[shortURL].userID === urlDatabase[shortURL].userID) {
-    urlDatabase[req.params.shortURL].longURL = req.body.longURL;
+  if (urlsForUser(user.id, urlDatabase)[shortURL].userID === urlDatabase[shortURL].userID) {
+    urlDatabase[shortURL].longURL = req.body.longURL;
     res.redirect("/urls");
   } else {
     res.redirect("/urls");
   }
-
 });
 
 // After generating new shortURL, and using route parameters, redirect user to urls_show page displaying the short and long URL
 app.get("/urls/:shortURL", (req, res) => {
   const user = users[req.session.user_id];
   const shortURL = req.params.shortURL;
+  const userObject = urlsForUser(user.id, urlDatabase)[shortURL]
   // Check filtered list whether a shortURL exists (ie. not undefined), and continue
-  if (user && urlsForUser(user.id)[shortURL] !== undefined) {
+  if (user && userObject !== undefined) {
     let templateVars = {
       user,
       shortURL: shortURL,
-      longURL: urlsForUser(user.id)[shortURL].longURL,
+      longURL: userObject.longURL,
     };
     res.render("urls_show", templateVars);
   } else {
     res.redirect("/login");
   }
-
 });
 
 app.get("/register", (req, res) => {
@@ -115,7 +99,6 @@ app.post("/register", (req, res) => {
     const hashedPassword = bcrypt.hashSync(req.body.password, 10);
     users[id] = { id, email: req.body.email, password: hashedPassword };
     req.session.user_id = users[id].id;
-    // res.cookie("user_id", users[id].id);
     res.redirect("/urls");
   }
 });
@@ -138,7 +121,7 @@ app.get("/urls", (req, res) => {
   const user = users[req.session.user_id];
   if (user) {
     let templateVars = {
-      urls: urlsForUser(user.id),
+      urls: urlsForUser(user.id, urlDatabase),
       user
     };
     res.render("urls_index", templateVars);
@@ -156,8 +139,9 @@ app.get("/u/:shortURL", (req, res) => {
 // Login and create cookie for current user
 app.post("/login", (req, res) => {
   const user = getUserByEmail(req.body.email, users);
+  const encryptedPasswordMatch = bcrypt.compareSync(req.body.password, users[user].password);
   if (user) {
-    if (users[user].email === req.body.email && bcrypt.compareSync(req.body.password, users[user].password)) {
+    if (users[user].email === req.body.email && encryptedPasswordMatch) {
       req.session.user_id = users[user].id;
       res.redirect("/urls");
       // Returning here will prevent "Can't set headers after they are sent" error
@@ -176,8 +160,4 @@ app.post("/logout", (req, res) => {
   res.clearCookie("user_id", users[req.session.user_id]);
   res.redirect("/login");
 });
-
-// Listen for the server on the port; required to operate (though nothing needs to be put in the function itself)
-app.listen(PORT, () => { });
-
 
