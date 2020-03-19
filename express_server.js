@@ -13,7 +13,7 @@ function generateRandomString() {
 // Check to see if the email address already exists in the list of users
 function checkUsersEmail(emailAddress) {
   for (const user in users) {
-    // NOT users[users.email]!!!
+    // NOT users[user.email]!!!
     if (users[user].email === emailAddress) {
       return true;
     }
@@ -43,10 +43,15 @@ app.get("/users.json", (req, res) => {
 // Create new tiny URL
 app.get("/urls/new", (req, res) => {
   const user = users[req.cookies["user_id"]];
-  let templateVars = {
-    user
-  };
-  res.render("urls_new", templateVars);
+  if (user) {
+    let templateVars = { 
+      user
+    };
+    res.render("urls_new", templateVars);
+  } else {
+    res.redirect("/login");
+  }
+
 });
 
 // Delete entry added to My URLs
@@ -117,7 +122,6 @@ app.get("/urls", (req, res) => {
   } else {
     res.redirect("/register");
   }
-  // console.log(user)
 });
 
 // When the shortened link is clicked on, redirect to the site
