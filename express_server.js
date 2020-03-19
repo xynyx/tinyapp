@@ -14,22 +14,12 @@ function generateRandomString() {
   return Math.random().toString(36).slice(2).substring(0, 6);
 };
 
-// Check to see if the email address already exists in the list of users
-function checkUsersEmail(emailAddress) {
-  for (const user in users) {
-    // NOT users[user.email]!!!
-    if (users[user].email === emailAddress) {
-      return true;
-    }
-  }
-  return false;
-};
-
 app.set("view engine", "ejs");
 
 const urlDatabase = {};
-const users = {};
+const users = { "gb4177": { "id": "gb4177", "email": "matt.taylr22@gmail.com", "password": "$2b$10$N9obFc1TFjLA8uvMgr9QrelnrRgFf9YvRr6JzZzI41YvKIMGIGcgC" }, "gb1227": { "id": "gb1227", "email": "matt.tadsfsylr22@gmail.com", "password": "$2b$10$N9obFc1TFjLA8uvMgr9QrelnrRgFf9YvRr6JzZzI41YvKIMGIGcgC" } };
 
+// Filters urlDatabase and creates new database that only contains links for that particular user
 function urlsForUser(id) {
   const filteredLinks = {};
   for (const person in urlDatabase) {
@@ -40,12 +30,22 @@ function urlsForUser(id) {
   return filteredLinks;
 };
 
+// Find the user that corresponds with the given email
+const getUserByEmail = function(email, database) {
+  for (const user in database) {
+    if (database[user].email === email) {
+      return user;
+    }
+  }
+  return;
+};
+
 // urlDatabase in json format (REMOVE)
 app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-// Users json for testing
+// Users json for testing (REMOVE)
 app.get("/users.json", (req, res) => {
   res.json(users);
 });
@@ -112,14 +112,17 @@ app.get("/register", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  if (checkUsersEmail(req.body.email)) {
-    res.status(400).send('Something broke!');
-  } else if (req.body.email === "" || req.body.password === "") {
-    res.status(400).send('Something broke!');
+  if (req.body.email === "" || req.body.password === "") {
+    res.status(400).send('Email and/or password field cannot be left blank.');
+    return;
+  }
+  if (getUserByEmail(req.body.email, users)) {
+    res.status(400).send('This user already exists! Please login instead.');
+    return;
   } else {
     const id = generateRandomString();
     const hashedPassword = bcrypt.hashSync(req.body.password, 10);
-    users[id] = { id, email: req.body.email, password: hashedPassword};
+    users[id] = { id, email: req.body.email, password: hashedPassword };
     req.session.user_id = users[id].id;
     // res.cookie("user_id", users[id].id);
     res.redirect("/urls");
@@ -161,17 +164,16 @@ app.get("/u/:shortURL", (req, res) => {
 
 // Login and create cookie for current user
 app.post("/login", (req, res) => {
-  if (checkUsersEmail(req.body.email)) {
-    for (let id in users) {
-      if (users[id].email === req.body.email && bcrypt.compareSync(req.body.password, users[id].password)) {
-        req.session.user_id = users[id].id
-        res.redirect("/urls");
-        // Returning here will prevent "Can't set headers after they are sent" error
-        return;
-      }
+  const user = getUserByEmail(req.body.email, users);
+  if (user) {
+    if (users[user].email === req.body.email && bcrypt.compareSync(req.body.password, users[user].password)) {
+      req.session.user_id = users[user].id;
+      res.redirect("/urls");
+      // Returning here will prevent "Can't set headers after they are sent" error
+      return;
     }
   }
-  res.sendStatus(403);
+  res.status(403).send('The email and/or password is incorrect.');
 });
 
 app.get("/login", (req, res) => {
@@ -185,6 +187,6 @@ app.post("/logout", (req, res) => {
 });
 
 // Listen for the server on the port; required to operate (though nothing needs to be put in the function itself)
-app.listen(PORT, () => {});
+app.listen(PORT, () => { });
 
 
