@@ -11,29 +11,23 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-    </div>
-    <!-- Cannot just access email, must access user variable first! -->
-    <% if (user.email){ %>
-      <div>
-        <span>Logged In As: <%=user.email%></span>
-        <form id="logout" method="POST" action="/logout" style="font-size: 1.05em">
-        </form>
-      </div>
-      <div>
-        <button class="btn btn-secondary" form="logout" style="margin-left: 0.7em" >Logout</button>
-      </div>
-      <% } else{ %>
-        <div class="text-right">
-          <form id="login" method="POST" action="/login">
-            <input placeholder="Email" class = "form-control round" type="text" name="user_id" style="width: 200px; margin: 0.2em; margin-right: 10px"></input>
+
+      <% if (user) {%>
+        <div class="ml-auto">
+          <span>Logged In As: <%=user.email%></span>
+          <form id="logout" method="POST" action="/logout" style="font-size: 1.05em">
           </form>
         </div>
         <div>
-          <button class="btn btn-secondary" form="login">Login</button>
+          <button class="btn btn-outline-dark" form="logout" style="margin-left: 0.7em">Logout</button>
         </div>
-        <% } %>
+        <% } else {%>
+        <div class="navbar-nav ml-auto">
+          <a class="text-center nav-item nav-link" href="/register">Register</a>
+          <a class="text-right nav-item nav-link" href="/login">Login</a>
+        </div>
+      <% } %>
+    </div>
+
   </nav>
 </header>
-
-
-

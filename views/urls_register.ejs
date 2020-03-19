@@ -9,14 +9,18 @@
   <title>TinyApp</title>
 </head>
 
-
+<!-- 
 <header>
   <nav style="padding: 30px" class="navbar navbar-expand-md navbar-dark bg-success">
     <a style="font-size: 1.5em; display: block; margin-left: -50px; position: absolute; left: 50%" class="navbar-brand"
       href="/urls">TinyApp</a>
-</header>
+</header> -->
+
 
 <body>
+  <%- include('partials/_header') %>
+
+
   <div style="padding-bottom: 100%" class="card-header text-bold d-flex justify-content-center">
     <form style="width: 20em" class="form-group" id="register" method="POST" action="/register">
       <div class="form-group">
@@ -24,7 +28,7 @@
         <label style="font-size: 1.2em" for="email">Email</label>
         <input aria-describedby="emailHelp" placeholder="Email address" id="email" class="form-control" name="email"
           type="email"></input>
-        <small id="emailHelp" class="form-text text-muted">You will receive an email to authorize your account.</small>
+        <small id="emailHelp" class="form-text text-muted">Your email and password are safe with us!</small>
       </div>
       <div class="form-group">
         <label style="font-size: 1.2em" for="password">Password</label>
@@ -35,7 +39,6 @@
       </div>
     </form>
   </div>
-
 
 
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

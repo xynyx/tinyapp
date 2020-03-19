@@ -35,10 +35,15 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
+// Users json for testing
+app.get("/users.json", (req, res) => {
+  res.json(users);
+});
+
 // Create new tiny URL
 app.get("/urls/new", (req, res) => {
   const user = users[req.cookies["user_id"]];
-  let templateVars = { 
+  let templateVars = {
     user
   };
   res.render("urls_new", templateVars);
@@ -61,37 +66,37 @@ app.get("/urls/:shortURL", (req, res) => {
   const user = users[req.cookies["user_id"]];
   let templateVars = {
     user,
-    shortURL: req.params.shortURL, 
+    shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL],
   };
-  res.render("urls_show", templateVars)
+  res.render("urls_show", templateVars);
 });
 
 app.get("/register", (req, res) => {
-  res.render("urls_register")
-})
+  res.render("urls_register", { user: undefined });
+});
 
 app.post("/register", (req, res) => {
-  if(checkUsersEmail(req.body.email)) {
+  if (checkUsersEmail(req.body.email)) {
     res.sendStatus(400);
   }
+  console.log(Object.values(users));
   const id = generateRandomString();
   users[id] = { id, email: req.body.email, password: req.body.password };
 
   if (users[id].email === "" || users[id].password === "") {
-    res.sendStatus(400);
+    res.send(`Please enter an email and/or password. Statuscode:${res.sendStatus(400)}`);
   } else {
-    res.cookie("user_id", users[id].id)
+    res.cookie("user_id", users[id].id);
     res.redirect("/urls");
   }
-  console.log(users);
   // console.log(users[id].id)
-})
+});
 
 // Generate random 6-digit shortURL code and attach longURL to it
 app.post("/urls", (req, res) => {
   const shortURL = generateRandomString();
-  // TinyURL will not function correctly without proper protocol; add if missing
+  // TinyApp will not function correctly without proper protocol; add if missing
   if (!req.body.longURL.includes("http://")) {
     urlDatabase[shortURL] = `http://${req.body.longURL}`;
   } else {
@@ -122,22 +127,34 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 // Login and create cookie for current user
-// app.post("/login", (req, res) => {
-//   res.cookie("username", req.body.username);
-//   res.redirect("/urls");
-// });
+app.post("/login", (req, res) => {
+  if (checkUsersEmail(req.body.email)) {
+    for (let id in users) {
+      if (users[id].email === req.body.email && users[id].password === req.body.password) {
+        res.cookie("user_id", users[id].id);
+        res.redirect("/urls");
+      }
+    }
+  }
+  res.sendStatus(403);
+});
 
 app.get("/login", (req, res) => {
-  res.render("urls_login")
-})
+  res.render("urls_login", { user: undefined});
+});
+
+// app.get("/logout", (req, res) => {
+//   res.render("urls_login");
+// })
+
 
 // Logout and delete cookie for current user
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id", users[req.cookies["user_id"]]);
-  res.redirect("/urls");
-})
+  res.redirect("/login");
+});
 
 // Listen for the server on the port; required to operate (though nothing needs to be put in the function itself)
-app.listen(PORT, () => {});
+app.listen(PORT, () => { });
 
 
