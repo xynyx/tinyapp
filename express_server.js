@@ -40,7 +40,7 @@ function urlsForUser(id) {
   let filteredLinks = {};
   for (const person in urlDatabase) {
     if (urlDatabase[person].userID === id) {
-      filteredLinks[person] = { longURL: urlDatabase[person].longURL, userID: urlDatabase[person].userID };
+      filteredLinks[person] = urlDatabase[person];
     }
   }
   return filteredLinks;
