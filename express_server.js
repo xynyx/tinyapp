@@ -3,8 +3,11 @@ const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
-var cookieParser = require('cookie-parser');
-app.use(cookieParser());
+var cookieSession = require('cookie-session');
+app.use(cookieSession({
+  name: "session",
+  keys: ["user_id"]
+}));
 const bcrypt = require("bcrypt");
 
 function generateRandomString() {
@@ -49,7 +52,7 @@ app.get("/users.json", (req, res) => {
 
 // Create new tiny URL
 app.get("/urls/new", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   if (user) {
     let templateVars = {
       user
@@ -63,7 +66,7 @@ app.get("/urls/new", (req, res) => {
 
 // Delete entry added to My URLs
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   const shortURL = req.params.shortURL;
   if (user.id === urlDatabase[shortURL].userID) {
     delete urlDatabase[shortURL];
@@ -75,7 +78,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 // Update longURL
 app.post("/urls/:shortURL", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   const shortURL = req.params.shortURL;
   if (urlsForUser(user.id)[shortURL].userID === urlDatabase[shortURL].userID) {
     urlDatabase[req.params.shortURL].longURL = req.body.longURL;
@@ -88,7 +91,7 @@ app.post("/urls/:shortURL", (req, res) => {
 
 // After generating new shortURL, and using route parameters, redirect user to urls_show page displaying the short and long URL
 app.get("/urls/:shortURL", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   const shortURL = req.params.shortURL;
   // Check filtered list whether a shortURL exists (ie. not undefined), and continue
   if (user && urlsForUser(user.id)[shortURL] !== undefined) {
@@ -117,14 +120,15 @@ app.post("/register", (req, res) => {
     const id = generateRandomString();
     const hashedPassword = bcrypt.hashSync(req.body.password, 10);
     users[id] = { id, email: req.body.email, password: hashedPassword};
-    res.cookie("user_id", users[id].id);
+    req.session.user_id = users[id].id;
+    // res.cookie("user_id", users[id].id);
     res.redirect("/urls");
   }
 });
 
 // Generate random 6-digit shortURL code and attach longURL to it
 app.post("/urls", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   const shortURL = generateRandomString();
   // TinyApp will not function correctly without proper protocol; add if missing
   if (!req.body.longURL.includes("http://")) {
@@ -137,7 +141,7 @@ app.post("/urls", (req, res) => {
 
 // Displays the index which is a list of the urlDatabase shortURL:longURL pairs
 app.get("/urls", (req, res) => {
-  const user = users[req.cookies["user_id"]];
+  const user = users[req.session.user_id];
   if (user) {
     let templateVars = {
       urls: urlsForUser(user.id),
@@ -160,7 +164,7 @@ app.post("/login", (req, res) => {
   if (checkUsersEmail(req.body.email)) {
     for (let id in users) {
       if (users[id].email === req.body.email && bcrypt.compareSync(req.body.password, users[id].password)) {
-        res.cookie("user_id", users[id].id);
+        req.session.user_id = users[id].id
         res.redirect("/urls");
         // Returning here will prevent "Can't set headers after they are sent" error
         return;
@@ -176,7 +180,7 @@ app.get("/login", (req, res) => {
 
 // Logout and delete cookie for current user
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id", users[req.cookies["user_id"]]);
+  res.clearCookie("user_id", users[req.session.user_id]);
   res.redirect("/login");
 });
 
