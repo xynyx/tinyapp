@@ -5,6 +5,7 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 var cookieParser = require('cookie-parser');
 app.use(cookieParser());
+const bcrypt = require("bcrypt");
 
 function generateRandomString() {
   return Math.random().toString(36).slice(2).substring(0, 6);
@@ -23,21 +24,11 @@ function checkUsersEmail(emailAddress) {
 
 app.set("view engine", "ejs");
 
-// "b2xVn2": "http://www.lighthouselabs.ca",
-// "9sm5xK": "http://www.google.com"
-
-const urlDatabase = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: "aJ48lW" },
-  "9sm5xK": { longURL: "http://www.google.com", userID: "aJ479x" },
-  "9sasdK": { longURL: "http://www.godfgdfogle.com", userID: "aJ48lW" },
-  "9smsdfxK": { longURL: "http://www.google.com", userID: "aJ479sdgx" },
-  "9sx41K": { longURL: "http://www.google.com", userID: "aJ48lW" }
-};
-
-// urlDatabase[shortURL] = { longURL: `http://${req.body.longURL}`, userID: user.id };
+const urlDatabase = {};
+const users = {};
 
 function urlsForUser(id) {
-  let filteredLinks = {};
+  const filteredLinks = {};
   for (const person in urlDatabase) {
     if (urlDatabase[person].userID === id) {
       filteredLinks[person] = urlDatabase[person];
@@ -45,8 +36,6 @@ function urlsForUser(id) {
   }
   return filteredLinks;
 };
-
-const users = {};
 
 // urlDatabase in json format (REMOVE)
 app.get("/urls.json", (req, res) => {
@@ -76,11 +65,11 @@ app.get("/urls/new", (req, res) => {
 app.post("/urls/:shortURL/delete", (req, res) => {
   const user = users[req.cookies["user_id"]];
   const shortURL = req.params.shortURL;
-  if (urlsForUser(user.id)[shortURL].userID === urlDatabase[shortURL].userID) {
+  if (user.id === urlDatabase[shortURL].userID) {
     delete urlDatabase[shortURL];
     res.redirect("/urls");
   } else {
-    res.redirect("/urls");
+    res.redirect("/login");
   }
 });
 
@@ -126,7 +115,8 @@ app.post("/register", (req, res) => {
     res.status(400).send('Something broke!');
   } else {
     const id = generateRandomString();
-    users[id] = { id, email: req.body.email, password: req.body.password };
+    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
+    users[id] = { id, email: req.body.email, password: hashedPassword};
     res.cookie("user_id", users[id].id);
     res.redirect("/urls");
   }
@@ -169,9 +159,11 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/login", (req, res) => {
   if (checkUsersEmail(req.body.email)) {
     for (let id in users) {
-      if (users[id].email === req.body.email && users[id].password === req.body.password) {
+      if (users[id].email === req.body.email && bcrypt.compareSync(req.body.password, users[id].password)) {
         res.cookie("user_id", users[id].id);
         res.redirect("/urls");
+        // Returning here will prevent "Can't set headers after they are sent" error
+        return;
       }
     }
   }
@@ -182,11 +174,6 @@ app.get("/login", (req, res) => {
   res.render("urls_login", { user: undefined });
 });
 
-// app.get("/logout", (req, res) => {
-//   res.render("urls_login");
-// })
-
-
 // Logout and delete cookie for current user
 app.post("/logout", (req, res) => {
   res.clearCookie("user_id", users[req.cookies["user_id"]]);
@@ -194,6 +181,6 @@ app.post("/logout", (req, res) => {
 });
 
 // Listen for the server on the port; required to operate (though nothing needs to be put in the function itself)
-app.listen(PORT, () => { });
+app.listen(PORT, () => {});
 
 
