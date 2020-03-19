@@ -9,6 +9,7 @@ app.use(cookieSession({
   keys: ["user_id"]
 }));
 const bcrypt = require("bcrypt");
+const { getUserByEmail } = require("./helpers.js")
 
 function generateRandomString() {
   return Math.random().toString(36).slice(2).substring(0, 6);
@@ -28,16 +29,6 @@ function urlsForUser(id) {
     }
   }
   return filteredLinks;
-};
-
-// Find the user that corresponds with the given email
-const getUserByEmail = function(email, database) {
-  for (const user in database) {
-    if (database[user].email === email) {
-      return user;
-    }
-  }
-  return;
 };
 
 // urlDatabase in json format (REMOVE)
@@ -80,7 +71,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.post("/urls/:shortURL", (req, res) => {
   const user = users[req.session.user_id];
   const shortURL = req.params.shortURL;
-  if (urlsForUser(user.id)[shortURL].userID === urlDatabase[shortURL].userID) {
+  if (_.urlsForUser(user.id)[shortURL].userID === urlDatabase[shortURL].userID) {
     urlDatabase[req.params.shortURL].longURL = req.body.longURL;
     res.redirect("/urls");
   } else {
