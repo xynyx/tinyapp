@@ -84,7 +84,7 @@ app.post("/urls", (req, res) => {
   const user = users[req.session.user_id];
   const shortURL = generateRandomString();
   // TinyApp will not function correctly without proper protocol; add if missing
-  if (!req.body.longURL.includes("http://")) {
+  if (!req.body.longURL.includes("http://") && !req.body.longURL.includes("https://")) {
     urlDatabase[shortURL] = { longURL: `http://${req.body.longURL}`, userID: user.id, visits: 0, uniqueVisits: 0, visitorID: [], timeStamp: [] };
   } else {
     urlDatabase[shortURL] = { longURL: req.body.longURL, userID: user.id, visits: 0, uniqueVisits: 0, visitorID: [], timeStamp: [] };
