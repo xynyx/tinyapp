@@ -18,7 +18,10 @@
       <h5 class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a>
         <p style="padding-top: 0.6em">Visits: <%=visits%></p>
         <p>Unique Visitors: <%= uniqueVisits%> </p>
-        <table id="visitorData" class="table" style="margin: 0px auto; width: 100%">
+
+      </h5>
+      <div class="container text-centered">
+        <table id="visitorData" class="table table-hover text-centered margin-auto" style="margin: 0px auto; float: none; border-radius: 5px; width: 75%">
           <thead>
             <tr>
               <th scope="col">Visitor ID</th>
@@ -34,8 +37,8 @@
             <% } %>
           </tbody>
         </table>
+      </div>
 
-      </h5>
     </div>
     <div class="card-footer text-muted">
       <form method="POST" action="/urls/<%=shortURL%>?_method=PUT">
