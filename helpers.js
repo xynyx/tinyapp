@@ -24,5 +24,4 @@ function urlsForUser(id, database) {
   return filteredLinks;
 };
 
-
 module.exports = { getUserByEmail, generateRandomString, urlsForUser };
