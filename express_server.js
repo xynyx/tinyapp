@@ -79,6 +79,7 @@ app.get("/urls/:shortURL", (req, res) => {
     res.redirect("/login");
   }
 });
+
 // Generate random shortURL code and attach longURL to it
 app.post("/urls", (req, res) => {
   const user = users[req.session.user_id];
