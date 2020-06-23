@@ -26,6 +26,10 @@ app.set("view engine", "ejs");
 const urlDatabase = {};
 const users = {};
 
+app.get("/", (req, res) => {
+  res.redirect("/login");
+})
+
 // Create new tiny URL
 app.get("/urls/new", (req, res) => {
   const user = users[req.session.user_id];
