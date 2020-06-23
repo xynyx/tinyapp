@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-// const PORT = 8080;
+const PORT = process.env.PORT || 8080;
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 const cookieSession = require("cookie-session");
@@ -20,7 +20,7 @@ const {
   urlsForUser
 } = require("./helpers.js");
 
-// app.listen(PORT, () => {});
+app.listen(PORT, () => {});
 app.set("view engine", "ejs");
 
 const urlDatabase = {};
