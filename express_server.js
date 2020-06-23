@@ -1,20 +1,26 @@
-const express = require('express');
+const express = require("express");
 const app = express();
 const PORT = 8080;
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
-const cookieSession = require('cookie-session');
-app.use(cookieSession({
-  name: "session",
-  keys: ["user_id"]
-}));
+const cookieSession = require("cookie-session");
+app.use(
+  cookieSession({
+    name: "session",
+    keys: ["user_id"]
+  })
+);
 const bcrypt = require("bcrypt");
 const methodOverride = require("method-override");
-app.use(methodOverride('_method'));
+app.use(methodOverride("_method"));
 
-const { getUserByEmail, generateRandomString, urlsForUser } = require("./helpers.js");
+const {
+  getUserByEmail,
+  generateRandomString,
+  urlsForUser
+} = require("./helpers.js");
 
-app.listen(PORT, () => { });
+app.listen(PORT, () => {});
 app.set("view engine", "ejs");
 
 const urlDatabase = {};
@@ -49,7 +55,10 @@ app.delete("/urls/:shortURL", (req, res) => {
 app.put("/urls/:shortURL", (req, res) => {
   const user = users[req.session.user_id];
   const shortURL = req.params.shortURL;
-  if (urlsForUser(user.id, urlDatabase)[shortURL].userID === urlDatabase[shortURL].userID) {
+  if (
+    urlsForUser(user.id, urlDatabase)[shortURL].userID ===
+    urlDatabase[shortURL].userID
+  ) {
     urlDatabase[shortURL].longURL = req.body.longURL;
     res.redirect("/urls");
   } else {
@@ -71,7 +80,7 @@ app.get("/urls/:shortURL", (req, res) => {
       uniqueVisits: linkData.uniqueVisits,
       user,
       shortURL: shortURL,
-      longURL: userObject.longURL,
+      longURL: userObject.longURL
     };
 
     res.render("urls_show", templateVars);
@@ -85,10 +94,27 @@ app.post("/urls", (req, res) => {
   const user = users[req.session.user_id];
   const shortURL = generateRandomString();
   // TinyApp will not function correctly without proper protocol; add if missing
-  if (!req.body.longURL.includes("http://") && !req.body.longURL.includes("https://")) {
-    urlDatabase[shortURL] = { longURL: `http://${req.body.longURL}`, userID: user.id, visits: 0, uniqueVisits: 0, visitorID: [], timeStamp: [] };
+  if (
+    !req.body.longURL.includes("http://") &&
+    !req.body.longURL.includes("https://")
+  ) {
+    urlDatabase[shortURL] = {
+      longURL: `http://${req.body.longURL}`,
+      userID: user.id,
+      visits: 0,
+      uniqueVisits: 0,
+      visitorID: [],
+      timeStamp: []
+    };
   } else {
-    urlDatabase[shortURL] = { longURL: req.body.longURL, userID: user.id, visits: 0, uniqueVisits: 0, visitorID: [], timeStamp: [] };
+    urlDatabase[shortURL] = {
+      longURL: req.body.longURL,
+      userID: user.id,
+      visits: 0,
+      uniqueVisits: 0,
+      visitorID: [],
+      timeStamp: []
+    };
   }
   res.redirect(`/urls/${shortURL}`);
 });
@@ -114,11 +140,11 @@ app.get("/register", (req, res) => {
 // Register the user, checking for validity
 app.post("/register", (req, res) => {
   if (req.body.email === "" || req.body.password === "") {
-    res.status(400).send('Email and/or password field cannot be left blank.');
+    res.status(400).send("Email and/or password field cannot be left blank.");
     return;
   }
   if (getUserByEmail(req.body.email, users)) {
-    res.status(400).send('This user already exists! Please login instead.');
+    res.status(400).send("This user already exists! Please login instead.");
     return;
   } else {
     const id = generateRandomString();
@@ -148,15 +174,18 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/login", (req, res) => {
   const user = getUserByEmail(req.body.email, users);
   if (user) {
-    if (users[user].email === req.body.email && bcrypt.compareSync(req.body.password, users[user].password)) {
+    if (
+      users[user].email === req.body.email &&
+      bcrypt.compareSync(req.body.password, users[user].password)
+    ) {
       req.session.user_id = users[user].id;
       res.redirect("/urls");
       // Returning here will prevent "Can't set headers after they are sent" error
       return;
     }
-    res.status(403).send('The email and/or password is incorrect.');
+    res.status(403).send("The email and/or password is incorrect.");
   }
-  res.status(403).send('The account does not exist. Please create an account.');
+  res.status(403).send("The account does not exist. Please create an account.");
 });
 
 app.get("/login", (req, res) => {
@@ -168,4 +197,3 @@ app.post("/logout", (req, res) => {
   req.session = null;
   res.redirect("/login");
 });
-
