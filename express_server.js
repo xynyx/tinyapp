@@ -10,7 +10,7 @@ app.use(
     keys: ["user_id"]
   })
 );
-const bcrypt = require("bcrypt-nodejs");
+const bcrypt = require("bcrypt");
 const methodOverride = require("method-override");
 app.use(methodOverride("_method"));
 
